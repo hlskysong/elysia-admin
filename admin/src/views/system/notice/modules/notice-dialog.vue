@@ -1,6 +1,6 @@
 <template>
-    <ElDialog v-model="dialogVisible" :title="dialogType === 'add' ? '新增通知公告' : '编辑通知公告'" width="800px"
-        align-center @closed="handleClosed">
+    <ElDialog v-model="dialogVisible" :title="dialogType === 'add' ? '新增通知公告' : '编辑通知公告'" width="800px" align-center
+        @closed="handleClosed">
         <div class="notice-dialog-body">
             <ArtForm ref="formRef" v-model="formData" :items="formItems" :rules="rules" :span="12" label-width="90px"
                 :show-reset="false" :show-submit="false">
@@ -139,10 +139,17 @@ const initFormData = () => {
     }
 }
 
+/** reset 会把字段写成 undefined，选择器 change 会误触发校验，需在更新后再清掉 */
+function clearFormValidate() {
+    nextTick(() => formRef.value?.clearValidate())
+}
+
 watch(
     () => props.visible,
     (visible) => {
-        if (visible) nextTick(() => initFormData())
+        if (!visible) return
+        initFormData()
+        clearFormValidate()
     },
 )
 
@@ -168,6 +175,7 @@ const handleSubmit = () => {
 
 const handleClosed = () => {
     formRef.value?.reset()
+    clearFormValidate()
 }
 </script>
 
