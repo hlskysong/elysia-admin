@@ -19,6 +19,7 @@ import { useUserStore } from '@/store/modules/user'
 import { ApiStatus } from './status'
 import { HttpError, handleError, showError, showSuccess } from './error'
 import { $t } from '@/locales'
+import { getEncryptPublicKey, createRequestKey, aesEncrypt, aesDecrypt } from '@/utils/crypto'
 import { BaseResponse } from '@/types'
 
 /** 请求配置常量 */
@@ -68,7 +69,7 @@ const axiosInstance = axios.create({
 
 /** 请求拦截器 */
 axiosInstance.interceptors.request.use(
-  (request: InternalAxiosRequestConfig) => {
+  async (request: InternalAxiosRequestConfig) => {
     const { accessToken } = useUserStore()
     if (accessToken) request.headers.set('Authorization', `Bearer ${accessToken}`)
 
@@ -77,6 +78,7 @@ axiosInstance.interceptors.request.use(
       request.data = JSON.stringify(request.data)
     }
 
+    await encryptRequest(request)
     return request
   },
   (error) => {
@@ -85,15 +87,47 @@ axiosInstance.interceptors.request.use(
   }
 )
 
+/** 带加密密钥的请求配置（密钥仅保存在本次请求的 config 上） */
+type EncryptedConfig = InternalAxiosRequestConfig & { _aesKey?: CryptoKey }
+
+/** 加密请求：写入 X-Encrypt-Key 并加密 JSON 请求体；文件上传/二进制响应/重试请求跳过 */
+async function encryptRequest(request: EncryptedConfig) {
+  if (request._aesKey) return
+  const isBinary = ['blob', 'arraybuffer', 'stream'].includes(request.responseType || '')
+  const isJsonBody =
+    typeof request.data === 'string' && String(request.headers.get('Content-Type')).includes('json')
+  if (isBinary || (request.data && !isJsonBody)) return
+  const publicKey = await getEncryptPublicKey()
+  if (!publicKey) return
+  const { aesKey, wrappedKey } = await createRequestKey(publicKey)
+  request.headers.set('X-Encrypt-Key', wrappedKey)
+  if (isJsonBody) request.data = JSON.stringify({ data: await aesEncrypt(aesKey, request.data) })
+  request._aesKey = aesKey
+}
+
+/** 解密响应：本次请求带密钥且响应体为 { encrypted, data } 时，替换为解密后的对象 */
+async function decryptResponse(response?: AxiosResponse) {
+  const key = (response?.config as EncryptedConfig | undefined)?._aesKey
+  const body = response?.data
+  if (!response || !key || body?.encrypted !== true || typeof body.data !== 'string') return
+  try {
+    response.data = JSON.parse(await aesDecrypt(key, body.data))
+  } catch {
+    /* 解密失败保持原样，由后续逻辑按失败处理 */
+  }
+}
+
 /** 响应拦截器 */
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse<BaseResponse>) => {
+  async (response: AxiosResponse<BaseResponse>) => {
+    await decryptResponse(response)
     const { code, msg } = response.data
     if (code === ApiStatus.success) return response
     if (code === ApiStatus.unauthorized) return handleUnauthorizedResponse(response)
     throw createHttpError(msg || $t('httpMsg.requestFailed'), code)
   },
   async (error) => {
+    await decryptResponse(error.response)
     if (error.response?.status === ApiStatus.unauthorized) {
       return handleUnauthorizedResponse(error.response, error.config)
     }
@@ -112,10 +146,16 @@ async function refreshAccessToken(): Promise<string> {
 
   try {
     // refreshToken 通过 HTTP-only Cookie 自动携带，无需手动设置
+    const body = { refreshToken: userStore.refreshToken }
+    const publicKey = await getEncryptPublicKey()
+    const encrypted = publicKey ? await createRequestKey(publicKey) : null
     const response = await axios.post<BaseResponse<Api.Auth.LoginResponse>>(
       `${VITE_API_URL}/api/auth/refresh`,
-      { refreshToken: userStore.refreshToken },
+      encrypted ? { data: await aesEncrypt(encrypted.aesKey, JSON.stringify(body)) } : body,
+      encrypted ? { headers: { 'X-Encrypt-Key': encrypted.wrappedKey } } : undefined,
     );
+    ; (response.config as EncryptedConfig)._aesKey = encrypted?.aesKey
+    await decryptResponse(response)
     const { code, data, msg } = response.data
     if (code === ApiStatus.success && data?.accessToken) {
       userStore.setToken(data.accessToken, data.refreshToken)

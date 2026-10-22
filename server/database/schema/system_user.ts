@@ -1,4 +1,5 @@
-import { pgTable, uuid, varchar, boolean, bigint } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, boolean, bigint, uniqueIndex } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from "drizzle-typebox";
 import { BaseSchema } from '@database/base-schema';
 import { systemRoleSchema } from '@database/schema/system_role';
@@ -8,7 +9,7 @@ export const systemUserSchema = pgTable(
     'system_user',
     {
         userId: uuid('user_id').primaryKey().defaultRandom(), // 用户ID
-        username: varchar('username', { length: 64 }).notNull().unique(), // 用户名
+        username: varchar('username', { length: 64 }).notNull(), // 用户名
         password: varchar('password', { length: 255 }).notNull(), // 密码
         nickname: varchar('nickname', { length: 64 }), // 昵称
         email: varchar('email', { length: 64 }), // 邮箱
@@ -18,7 +19,10 @@ export const systemUserSchema = pgTable(
         deptId: bigint('dept_id', { mode: 'number' }).references(() => systemDeptSchema.deptId), // 部门ID
         status: boolean('status').default(true), // 状态
         ...BaseSchema,
-    }
+    },
+    (table) => [
+        uniqueIndex('system_user_username_unique').on(table.username).where(sql`del_flag = false`),
+    ]
 );
 export const InsertSystemUser = createInsertSchema(systemUserSchema);
 export const SelectSystemUser = createSelectSchema(systemUserSchema);

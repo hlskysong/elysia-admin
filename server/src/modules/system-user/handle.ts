@@ -13,6 +13,7 @@ import {
     UpdateByKeyAndRes,
     CreateQueryBuilder,
     FindPage,
+    FindAll,
     SoftDeleteByKeys,
 } from '@/core/database/repository';
 import {
@@ -171,7 +172,8 @@ export async function GetUserBy(key: string, val: any) {
 
 // 注册用户
 export async function RegisterUser(username: string, password: string): Promise<void> {
-    const exists = await GetUserBy('username', username);
+    const where = CreateQueryBuilder(systemUserSchema).eq('username', username).eq('delFlag', false).build();
+    const [exists] = await FindAll(systemUserSchema, where);
     if (exists) {
         const e = new Error('用户名已存在') as Error & { httpStatus?: number };
         e.httpStatus = 409;

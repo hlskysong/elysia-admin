@@ -25,6 +25,13 @@ const raw = YAML.parse(text) as Record<string, unknown>;
     ...(raw.log as Record<string, unknown> | undefined),
 };
 
+(raw as { crypto: Record<string, unknown> }).crypto = {
+    enabled: false,
+    privateKey: '',
+    publicKey: '',
+    ...(raw.crypto as Record<string, unknown> | undefined),
+};
+
 if (!Value.Check(ConfigSchema, raw)) {
     const detail = [...Value.Errors(ConfigSchema, raw)]
         .map((e) => `  - ${e.path}: ${e.message}`)

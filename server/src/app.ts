@@ -8,6 +8,7 @@ import { staticPlugin } from '@elysiajs/static';
 import { BunAdapter } from 'elysia/adapter/bun';
 import { GlobalMiddleware, GlobalResponseMiddleware } from "@/middleware";
 import { SecurityHeadersMiddleware } from '@/middleware/security-headers';
+import { CryptoMiddleware } from '@/middleware/crypto';
 import { ConfigureErrorHandler } from '@/middleware/error-handler';
 import { ConfigureOpenAPI } from '@/infrastructure/openapi';
 import { getDistRoot } from '@/shared/log-stream';
@@ -46,6 +47,7 @@ export async function CreateApp() {
     }));
     if (!isProduction) await ConfigureOpenAPI(app);
     SecurityHeadersMiddleware(app);
+    CryptoMiddleware(app);
     GlobalMiddleware(app);
     GlobalResponseMiddleware(app);
     ConfigureErrorHandler(app);

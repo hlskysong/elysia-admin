@@ -47,6 +47,7 @@
     "test": "bun test --preload ./test/preload.ts",
     "test:watch": "bun test --watch --preload ./test/preload.ts",
     "test:coverage": "bun test --coverage --preload ./test/preload.ts",
+    "gen:crypto-keys": "bun run script/generate-crypto-keys.ts",
     "create:module": "bun run script/create-module.ts",
     "create:page": "bun run script/create-page.ts"
   },

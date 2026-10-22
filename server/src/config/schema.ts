@@ -128,6 +128,16 @@ const LogSchema = t.Object({
     showRequestParams: t.Boolean(),
 }, strict);
 
+/** 请求/响应加解密配置（RSA + AES-GCM 混合加密） */
+const CryptoSchema = t.Object({
+    /** 是否启用请求/响应加解密（关闭时不注册中间件，公钥接口返回 enabled=false） */
+    enabled: t.Boolean(),
+    /** RSA 私钥（PEM, PKCS8），仅服务端持有 */
+    privateKey: t.String(),
+    /** RSA 公钥（PEM, SPKI），通过公钥接口下发给前端 */
+    publicKey: t.String(),
+}, strict);
+
 /** 完整应用配置结构，与 development.yaml / production.yaml 对应 */
 export const ConfigSchema = t.Object({
     app: AppSchema,
@@ -138,6 +148,7 @@ export const ConfigSchema = t.Object({
     guard: GuardSchema,
     orders: OrdersSchema,
     log: LogSchema,
+    crypto: CryptoSchema,
 }, strict);
 
 export type IConfig = Static<typeof ConfigSchema>;

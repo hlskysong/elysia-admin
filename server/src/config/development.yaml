@@ -1,4 +1,4 @@
-app:
+﻿app:
   id: "Elysia-Admin"
   port: 3000
   prefix: "/api"
@@ -70,3 +70,12 @@ orders:
 log:
   level: "debug"
   showRequestParams: true
+
+
+# 请求/响应加解密（RSA + AES-GCM）。生成密钥对（自动写入本文件，不会改 enabled）:
+#  bun run gen:crypto-keys   （已有密钥需加 --force 才会覆盖）
+# 私钥切勿提交到仓库；PEM 也可手动用 YAML 块写法或单行 \n 写法填写。
+crypto:
+  enabled: true
+  privateKey: ""
+  publicKey: ""
