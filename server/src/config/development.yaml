@@ -76,6 +76,6 @@ log:
 #  bun run gen:crypto-keys   （已有密钥需加 --force 才会覆盖）
 # 私钥切勿提交到仓库；PEM 也可手动用 YAML 块写法或单行 \n 写法填写。
 crypto:
-  enabled: true
+  enabled: false
   privateKey: ""
   publicKey: ""
