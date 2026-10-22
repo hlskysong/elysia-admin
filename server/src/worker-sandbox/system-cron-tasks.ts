@@ -3,6 +3,7 @@
  * infrastructure 内的 processor 只应 import 本目录，不直接 import modules。
  */
 import { jobDemo } from '@/modules/monitor-job/task';
+import { renewDueCerts } from '@/modules/system-deploy/task';
 import type { TaskFn } from '@/infrastructure/queue/core/processor-utils';
 
 
@@ -10,4 +11,5 @@ export function registerSystemCronSandboxTasks(
     register: (name: string, fn: TaskFn) => void
 ): void {
     register('测试任务', jobDemo);
+    register('站点证书续签', renewDueCerts);
 };

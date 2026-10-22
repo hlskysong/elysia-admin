@@ -307,6 +307,7 @@
       "loginLog": "Login Log",
       "operLog": "Oper Log",
       "storage": "Storage Config",
+      "deploy": "Site Deploy",
       "notice": "Notice"
     },
     "monitor": {

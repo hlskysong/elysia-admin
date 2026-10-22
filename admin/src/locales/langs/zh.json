@@ -307,6 +307,7 @@
       "loginLog": "登陆日志",
       "operLog": "操作日志",
       "storage": "存储配置",
+      "deploy": "站点部署",
       "notice": "通知公告"
     },
     "monitor": {

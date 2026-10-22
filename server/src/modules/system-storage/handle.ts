@@ -6,12 +6,35 @@ import {
     SoftDeleteByKeys,
     CreateQueryBuilder,
     FindPage,
+    FindAll,
     FindOneByKey,
 } from '@/core/database/repository';
 import { ParseDateFields } from '@/types/dto';
 import { RunTransaction } from '@/core/database/transaction';
 import { systemStorageSchema } from '@database/schema/system_storage';
 import { StorageService, type StorageProviderType } from '@/infrastructure/storage';
+
+function toBucketPath(bucket: string) {
+    const name = bucket.trim().replace(/^\/+|\/+$/g, '');
+    return name ? `/${name}/` : '';
+}
+
+/**
+ * 获取当前启用的 RustFS 存储桶（跨模块复用，如站点部署默认路径）
+ * @returns `{ bucket, path }`；无可用配置时返回 `null`
+ */
+export async function GetActiveRustFsBucket() {
+    const where = CreateQueryBuilder(systemStorageSchema)
+        .eq('delFlag', false)
+        .eq('status', true)
+        .eq('name', 'RustFS')
+        .build();
+    const rows = await FindAll(systemStorageSchema, where, { limit: 1 });
+    const bucket = rows[0]?.bucket?.trim();
+    if (!bucket) return null;
+    const path = toBucketPath(bucket);
+    return path ? { bucket, path } : null;
+};
 
 export async function create(ctx: AppContext) {
     await InsertOne(systemStorageSchema, ctx);
@@ -52,6 +75,14 @@ export async function generatePresign(ctx: AppContext) {
     const storageService = new StorageService(storage.name as StorageProviderType, config);
     const presignedUrl = await storageService.getPresignedUrl({ key: fileName, method: 'put' });
     return BaseResultData.ok(presignedUrl);
+};
+
+/**
+ * 查询当前启用的 RustFS 桶名与默认反代路径
+ */
+export async function findRustFsBucket() {
+    const data = await GetActiveRustFsBucket();
+    return BaseResultData.ok(data);
 };
 
 export async function update(ctx: AppContext) {

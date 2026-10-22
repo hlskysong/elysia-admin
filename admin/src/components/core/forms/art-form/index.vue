@@ -427,7 +427,8 @@ const handleSubmit = () => {
 defineExpose({
   ref: formInstance,
   validate: (...args: any[]) => formInstance.value?.validate(...args),
-  reset: handleReset
+  reset: handleReset,
+  clearValidate: (props?: string | string[]) => formInstance.value?.clearValidate(props)
 })
 
 // 解构 props 以便在模板中直接使用

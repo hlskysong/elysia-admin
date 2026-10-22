@@ -39,16 +39,10 @@ $box-radius: calc(var(--custom-radius) / 3 + 2px);
     border-radius: $box-radius;
   }
 
-  /* 下拉选择框元素配置 */
+  /* 下拉选择框元素配置（字号交给菜单 inline style，避免 !important 压平标题预览） */
   .w-e-select-list ul li {
     margin-top: 5px;
-    font-size: 15px !important;
     border-radius: $box-radius;
-  }
-
-  /* 下拉选择框 正文文字大小调整 */
-  .w-e-select-list ul li:last-of-type {
-    font-size: 16px !important;
   }
 
   /* 下拉选择框 hover 样式调整 */
@@ -127,12 +121,45 @@ $box-radius: calc(var(--custom-radius) / 3 + 2px);
   .w-e-text-container {
     strong,
     b {
-      font-weight: 500;
+      font-weight: 700;
     }
 
     i,
     em {
       font-style: italic;
+    }
+
+    /* Tailwind Preflight 会把 h1–h6 重置为 inherit，这里在编辑区内补回层级 */
+    [data-slate-editor] {
+      h1 {
+        font-size: 32px;
+        font-weight: bold;
+      }
+
+      h2 {
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      h3 {
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      h4 {
+        font-size: 16px;
+        font-weight: bold;
+      }
+
+      h5 {
+        font-size: 13px;
+        font-weight: bold;
+      }
+
+      h6 {
+        font-size: 12px;
+        font-weight: bold;
+      }
     }
   }
 

@@ -32,6 +32,13 @@ export function fetchGeneratePresign(params: { fileName: string }) {
     })
 }
 
+/** 当前启用的 RustFS 桶名与默认反代路径 */
+export function fetchGetRustFsBucket() {
+    return request.get<Api.SystemStorage.RustFsBucket | null>({
+        url: '/api/system/storage/rustfs-bucket',
+    })
+}
+
 /**
  * 更新
  */

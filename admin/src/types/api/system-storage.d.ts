@@ -23,5 +23,11 @@ declare namespace Api {
             Pick<StorageListItem, 'name'> &
             Api.Common.CommonSearchParams
         >
+
+        /** 当前启用的 RustFS 桶信息 */
+        interface RustFsBucket {
+            bucket: string
+            path: string
+        }
     }
 }
